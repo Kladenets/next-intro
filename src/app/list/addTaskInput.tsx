@@ -32,9 +32,8 @@ function AddTaskInput({
 }: AddTaskInputProps) {
     // const [taskToAdd, setTodoToAdd] = useState("");
 
-    return <div>
-        <Input placeholder={placeholder} value={value} onChange={onChange} {...props} />
-    </div>
+    return <Input placeholder={placeholder} value={value} onChange={onChange} {...props} />
+
 }
 
 export { AddTaskInput };

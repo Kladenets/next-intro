@@ -15,9 +15,7 @@ function AddTaskButton({
     ...props
 }: AddTaskButtonProps) {
 
-    return <div>
-        <Button {...props} variant={variant} onClick={onClick}>{label}</Button> 
-    </div>
+    return <Button {...props} variant={variant} onClick={onClick}>{label}</Button>
 }
 
 export { AddTaskButton };
