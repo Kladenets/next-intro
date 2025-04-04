@@ -3,9 +3,9 @@
 import { Suspense, useEffect, useReducer, useState } from "react";
 import { addTodo, getTodos } from "../../../lib/connect";
 import { TodosRecord } from "../../../pocketbase_0.26.2_darwin_arm64/pocketbase-types";
-import { AddTaskButton } from "./addTaskButton";
-import { AddTaskInput } from "./addTaskInput";
 import TaskList from "./taskList";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export enum TodoActionType {
   requestReload = 'request_reload',
@@ -60,12 +60,14 @@ function reducer(state: TodoState, action: TodoAction) {
         return state;
       }
 
-      const tempTodos = state.todos;
-      const index = tempTodos.findIndex((item) => item.id === action.payload?.id);
-      tempTodos[index] = action.payload;
-
       return {
-        todos: tempTodos,
+        todos: state.todos.map((todo) => {
+          if (todo.id === action.payload?.id) {
+            return action.payload;
+          } else {
+            return todo;
+          }
+        }),
         needReload: false
       };
 
@@ -87,6 +89,7 @@ function reducer(state: TodoState, action: TodoAction) {
 export default function Page() {
     const [state, dispatch] = useReducer(reducer, { todos: [], needReload: false });
     const [taskToAdd, setTodoToAdd] = useState("");
+    const [search, setSearch] = useState("");
 
     // initial page load
     useEffect(() => {
@@ -99,7 +102,6 @@ export default function Page() {
       }
 
       getTodos().then((response) => {
-
         if (response.error || !response.todos) {
             // instead of console.error need to display this for the user
             console.error("A connection could not be established with the database:", response.error);
@@ -128,15 +130,27 @@ export default function Page() {
   }
 
     return <Suspense>
-      <div className="width-full h-screen grid items-center justify-center gap-4">
-        <div id="header" className="flex items-center space-x-2 justify-center">
-          <h1 className="text-2xl">Things to do</h1>
+      <div className="w-full h-screen">
+        {/* <div id="header" className="mr-5 ml-5 mt-5">
+          
+          <SearchInput placeholder="Search..." />
+        </div> */}
+        {/* splitting these into separate components should improve performance and minimized rerenders */}
+        <div id="header" className="container mx-auto sticky flex items-center space-x-5 justify-self-center pr-5 pl-5 pt-5">
+          {/* <h1 className="text-2xl text-nowrap">I need to...</h1> */}
+          <Input placeholder={"Search"} value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Button variant={"outline"} onClick={newTodoOnClick}>{"Search"}</Button>
         </div>
-        <div className="flex space-x-2">
-          <AddTaskInput placeholder="Add a task" value={taskToAdd} onChange={(e) => setTodoToAdd(e.target.value)} />
-          <AddTaskButton label="Add task" variant={"outline"} onClick={newTodoOnClick}/>
+        {/* <div id="list" className="grid items-center justify-center gap-2"> */}
+        <div className="flex items-center space-x-5 justify-self-center 
+            lg:static pr-5 pl-5 pt-5 lg:container lg:mx-auto w-full
+            fixed bottom-5 left-5 right-5 z-50 ">
+          <Input placeholder={"I need to..."} value={taskToAdd} onChange={(e) => setTodoToAdd(e.target.value)} />
+          <Button variant={"outline"} onClick={newTodoOnClick}>{"Add task"}</Button>
         </div>
-        <TaskList state={state} dispatch={dispatch} />
+        {/* state is changing on every update, rerendering all todos - a context provider might all for better control of rerenders */}
+        <TaskList className="mt-10 width-full justify-center justify-self-center 
+          gap-5 lg:gap-10  md:columns-2 lg:columns-3 xl:columns-4" state={state} dispatch={dispatch} />
       </div>
     </Suspense>
   }

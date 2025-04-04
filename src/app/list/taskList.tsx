@@ -33,4 +33,5 @@ export default function TaskList({state, dispatch, ...props}: TaskListProps) {
     return <div id="list" {...props}>
         {state?.todos.map((todo: TodosRecord) => (<Checkbox key={todo.id} label={todo.task} checked={todo.done} onClick={async () => handleClick(todo, dispatch)}/> ))}
       </div>
-  }
+}
+
