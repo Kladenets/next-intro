@@ -1,8 +1,7 @@
 "use client"
 
 import { Suspense, useEffect, useReducer, useState } from "react";
-import { addTodo, getTodos } from "../../../lib/connect";
-import { TodosRecord } from "../../../pocketbase_0.26.2_darwin_arm64/pocketbase-types";
+import { getTodos, TodosRecord, upsertTodo } from "../../../lib/minimongo";
 import TaskList from "./taskList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,7 +61,7 @@ function reducer(state: TodoState, action: TodoAction) {
 
       return {
         todos: state.todos.map((todo) => {
-          if (todo.id === action.payload?.id) {
+          if (todo._id === action.payload?._id) {
             return action.payload;
           } else {
             return todo;
@@ -77,7 +76,7 @@ function reducer(state: TodoState, action: TodoAction) {
       } 
 
       return {
-        todos: state.todos.filter((item) => item.id !== action.payload?.id),
+        todos: state.todos.filter((item) => item._id !== action.payload?._id),
         needReload: false
       };
 
@@ -101,22 +100,18 @@ export default function Page() {
         return;
       }
 
-      getTodos().then((response) => {
-        if (response.error || !response.todos) {
-            // instead of console.error need to display this for the user
-            console.error("A connection could not be established with the database:", response.error);
-          
-          return;
-        }
-
-        dispatch({ type: TodoActionType.reload, reloaded: response.todos });
-      });
+      getTodos().fetch(
+          (result: TodosRecord[]) => {
+            dispatch({ type: TodoActionType.reload, reloaded: result });
+          }, 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error: any) => console.error(error)
+        );
 
     }, [state.needReload]);
 
     const newTodoOnClick = async () => {
-      const response = await addTodo(taskToAdd);
-      console.log(response);
+      const response = await upsertTodo({task: taskToAdd, done: false});
   
       if (response.error || !response.todo) {
           // need to display this to the user instead of console.error

@@ -86,7 +86,7 @@ export type SuperusersRecord = {
 	verified?: boolean
 }
 
-export type TodosRecord = {
+export type DeprTodosRecord = {
 	created?: IsoDateString
 	done?: boolean
 	id: string
@@ -113,7 +113,7 @@ export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRec
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
-export type TodosResponse<Texpand = unknown> = Required<TodosRecord> & BaseSystemFields<Texpand>
+export type TodosResponse<Texpand = unknown> = Required<DeprTodosRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
@@ -124,7 +124,7 @@ export type CollectionRecords = {
 	_mfas: MfasRecord
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
-	todos: TodosRecord
+	todos: DeprTodosRecord
 	users: UsersRecord
 }
 
