@@ -13,14 +13,19 @@ export interface TodosRecord {
 const todosCollection = "todos";
 
 // Create IndexedDb
-const db = new IndexedDb({namespace: "mydb"}, function() {
-	// Add a collection to the database/grab the existing one
-	db.addCollection(todosCollection, function() {
-		// console.log("added collection todos");
-	}, function() { console.error("Could not create or fetch collection:", todosCollection); });
-}, function() { console.error("Could not create IndexedDb instance:", todosCollection); });
+export const initDB = (callback: () => void) => {
+   const db = new IndexedDb({namespace: "mydb"}, function() {
+        // Add a collection to the database/grab the existing one
+        db.addCollection(todosCollection, function() {
+            console.log("added collection todos");
+            callback();
+        }, function() { console.error("Could not create or fetch collection:", todosCollection); });
+    }, function() { console.error("Could not create IndexedDb instance:", todosCollection); });
 
-export async function upsertTodo(todoFields: Omit<TodosRecord, "_id">, id?: string): Promise<{todo: TodosRecord | undefined, error: any | undefined}> {
+    return db;
+}
+
+export async function upsertTodo(db: IndexedDb, todoFields: Omit<TodosRecord, "_id">, id?: string): Promise<{todo: TodosRecord | undefined, error: any | undefined}> {
     try {
       const record = await db.collections[todosCollection].upsert({ _id: id, ...todoFields });
       return { todo: record, error: undefined };
@@ -33,7 +38,7 @@ export async function upsertTodo(todoFields: Omit<TodosRecord, "_id">, id?: stri
     }
 }
 
-export function getTodos(): any {
+export function getTodos(db: IndexedDb): any {
     try {
         const records = db.collections[todosCollection].find({})
         return records;

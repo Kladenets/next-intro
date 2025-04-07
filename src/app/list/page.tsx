@@ -1,12 +1,14 @@
 "use client"
 
-import { Suspense, useEffect, useReducer, useState } from "react";
-import { getTodos, TodosRecord, upsertTodo } from "../../../lib/minimongo";
+import { Suspense, useEffect, useReducer, useRef, useState } from "react";
+import { getTodos, initDB, TodosRecord, upsertTodo} from "../../../lib/minimongo";
 import TaskList from "./taskList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { IndexedDb } from "minimongo";
 
 export enum TodoActionType {
+  dbConnected = 'dbConnected',
   requestReload = 'request_reload',
   reload = 'reload',
   add = 'add',
@@ -22,16 +24,23 @@ export interface TodoAction {
 
 export interface TodoState {
   needReload: boolean;
+  dbConnected?: boolean;
   todos: TodosRecord[];
 }
 
 // reducer actions should be called with the updated payload after a successful call to the database
 function reducer(state: TodoState, action: TodoAction) {
   switch (action.type) {
+    case TodoActionType.dbConnected:
+      return {
+        ...state,
+        dbConnected: true,
+      };
+
     case TodoActionType.requestReload:
       return {
         ...state,
-        needReload: true
+        needReload: true,
       };
 
     case TodoActionType.reload:
@@ -40,6 +49,7 @@ function reducer(state: TodoState, action: TodoAction) {
       }
 
       return {
+        ...state,
         todos: [...action.reloaded],
         needReload: false
       };
@@ -50,8 +60,8 @@ function reducer(state: TodoState, action: TodoAction) {
       }
 
       return {
+        ...state,
         todos: [...state.todos, action.payload],
-        needReload: false
       };
 
     case TodoActionType.update:
@@ -60,6 +70,7 @@ function reducer(state: TodoState, action: TodoAction) {
       }
 
       return {
+        ...state,
         todos: state.todos.map((todo) => {
           if (todo._id === action.payload?._id) {
             return action.payload;
@@ -67,7 +78,6 @@ function reducer(state: TodoState, action: TodoAction) {
             return todo;
           }
         }),
-        needReload: false
       };
 
     case TodoActionType.delete:
@@ -76,8 +86,8 @@ function reducer(state: TodoState, action: TodoAction) {
       } 
 
       return {
+        ...state,
         todos: state.todos.filter((item) => item._id !== action.payload?._id),
-        needReload: false
       };
 
     default:
@@ -86,32 +96,46 @@ function reducer(state: TodoState, action: TodoAction) {
 }
 
 export default function Page() {
-    const [state, dispatch] = useReducer(reducer, { todos: [], needReload: false });
+    const [state, dispatch] = useReducer(reducer, { todos: [], needReload: false, dbConnected: false });
     const [taskToAdd, setTodoToAdd] = useState("");
     const [search, setSearch] = useState("");
+    const dbConnection = useRef({});
 
     // initial page load
     useEffect(() => {
+      dbConnection.current = initDB(() => dispatch({ type: TodoActionType.dbConnected }));
       dispatch({ type: TodoActionType.requestReload });
     }, []);
 
     useEffect(() => {
-      if (!state.needReload) {
+      // console.log("needReload", state.needReload);
+      // console.log("dbConnected", state.dbConnected);
+      // console.log("dbConnection", dbConnection.current);
+      // console.log("trying to reload");
+
+      if (!state.needReload || !state.dbConnected || !dbConnection.current) {
+        // console.log("couldn't reload");
         return;
       }
 
-      getTodos().fetch(
-          (result: TodosRecord[]) => {
-            dispatch({ type: TodoActionType.reload, reloaded: result });
-          }, 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (error: any) => console.error(error)
-        );
+      try {
+        getTodos(dbConnection.current as IndexedDb).fetch(
+            (result: TodosRecord[]) => {
+              dispatch({ type: TodoActionType.reload, reloaded: result });
+              // console.log("did reload");
+            }, 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (error: any) => console.error(error)
+          );
+      } catch (error) {
+        // this should be a toast or some other user friendly error message
+        console.error(error);
+      }
 
-    }, [state.needReload]);
+    }, [state.needReload, state.dbConnected]);
 
     const newTodoOnClick = async () => {
-      const response = await upsertTodo({task: taskToAdd, done: false});
+      const response = await upsertTodo(dbConnection.current as IndexedDb, {task: taskToAdd, done: false});
   
       if (response.error || !response.todo) {
           // need to display this to the user instead of console.error
@@ -145,7 +169,7 @@ export default function Page() {
         </div>
         {/* state is changing on every update, rerendering all todos - a context provider might all for better control of rerenders */}
         <TaskList className="mt-10 width-full justify-center justify-self-center 
-          gap-5 lg:gap-10  md:columns-2 lg:columns-3 xl:columns-4" state={state} dispatch={dispatch} />
+          gap-5 lg:gap-10  md:columns-2 lg:columns-3 xl:columns-4" state={state} db={dbConnection.current as IndexedDb} dispatch={dispatch} />
       </div>
     </Suspense>
   }
