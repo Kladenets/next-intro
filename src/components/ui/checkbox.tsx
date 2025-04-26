@@ -16,7 +16,7 @@ function Checkbox({
   ...props
 }: CheckboxProps) {
   return (
-    <div className="flex items-center space-x-5 border-2 p-5 break-inside-avoid-column">
+    <div className="flex items-center space-x-5 p-2 break-inside-avoid-column">
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(

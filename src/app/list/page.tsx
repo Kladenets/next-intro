@@ -87,7 +87,7 @@ function reducer(state: TodoState, action: TodoAction) {
 
       return {
         ...state,
-        todos: state.todos.filter((item) => item._id !== action.payload?._id),
+        todos: [...state.todos.filter((item) => item._id !== action.payload?._id)],
       };
 
     default:
@@ -151,8 +151,6 @@ export default function Page() {
     return <Suspense>
       <div className="w-full h-screen">
         {/* <div id="header" className="mr-5 ml-5 mt-5">
-          
-          <SearchInput placeholder="Search..." />
         </div> */}
         {/* splitting these into separate components should improve performance and minimized rerenders */}
         <div id="header" className="container mx-auto sticky flex items-center space-x-5 justify-self-center pr-5 pl-5 pt-5">
@@ -161,15 +159,20 @@ export default function Page() {
           <Button variant={"outline"} onClick={newTodoOnClick}>{"Search"}</Button>
         </div>
         {/* <div id="list" className="grid items-center justify-center gap-2"> */}
-        <div className="flex items-center space-x-5 justify-self-center 
-            lg:static pr-5 pl-5 pt-5 lg:container lg:mx-auto w-full
-            fixed bottom-5 left-5 right-5 z-50 ">
+        <div className="
+              flex items-center space-x-5 justify-self-center 
+              lg:static pr-5 pl-5 pt-5 lg:container lg:mx-auto w-full
+              fixed bottom-5 left-5 right-5 z-50 ">
           <Input placeholder={"I need to..."} value={taskToAdd} onChange={(e) => setTodoToAdd(e.target.value)} />
           <Button variant={"outline"} onClick={newTodoOnClick}>{"Add task"}</Button>
         </div>
         {/* state is changing on every update, rerendering all todos - a context provider might all for better control of rerenders */}
-        <TaskList className="mt-10 width-full justify-center justify-self-center 
-          gap-5 lg:gap-10  md:columns-2 lg:columns-3 xl:columns-4" state={state} db={dbConnection.current as IndexedDb} dispatch={dispatch} />
+        <TaskList 
+          className="
+            mt-10 ml-10 mr-10 width-full justify-center justify-self-center 
+            gap-5 lg:gap-10  md:columns-2 lg:columns-3 xl:columns-4" 
+          todos={state.todos} db={dbConnection.current as IndexedDb} 
+          dispatch={dispatch} />
       </div>
     </Suspense>
   }

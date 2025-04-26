@@ -38,6 +38,19 @@ export async function upsertTodo(db: IndexedDb, todoFields: Omit<TodosRecord, "_
     }
 }
 
+export async function deleteTodo(db: IndexedDb, id?: string, success?: () => void, error?: (err: any) => void): Promise<{error: any | undefined}> {
+    try {
+      await db.collections[todosCollection].remove({ _id: id, success, error });
+      return { error: undefined };
+    } catch (error: any) {
+        if (globalConfig.verbose) {
+            console.error("connect.ts - could not upsert todo:", error);
+        }
+        
+        return { error: error };
+    }
+}
+
 export function getTodos(db: IndexedDb): any {
     try {
         const records = db.collections[todosCollection].find({})

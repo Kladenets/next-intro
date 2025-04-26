@@ -1,20 +1,19 @@
 "use client"
 
 import { ActionDispatch } from "react";
-import { TodosRecord } from "../../../lib/minimongo";
+import { deleteTodo, TodosRecord } from "../../../lib/minimongo";
 import { upsertTodo } from "../../../lib/minimongo";
-import { Checkbox } from "../../components/ui/checkbox";
-import { TodoAction, TodoActionType, TodoState } from "./page";
+import { TodoAction, TodoActionType } from "./page";
 import { IndexedDb } from "minimongo";
+import Task from "./task";
 
 export interface TaskListProps extends React.ComponentProps<"div"> {
-    data?: TodosRecord[];
-    state?: TodoState;
+    todos?: TodosRecord[];
     db?: IndexedDb;
     dispatch?: ActionDispatch<[action: TodoAction]>;
 }
 
-const handleClick = async (todo: TodosRecord, db?: IndexedDb, dispatch?: ActionDispatch<[action: TodoAction]>) => {
+const handleClickCheckbox = async (todo: TodosRecord, db?: IndexedDb, dispatch?: ActionDispatch<[action: TodoAction]>) => {
     if (!db) {
         console.error("db not connected, could not upsert todo");
         return;
@@ -34,11 +33,38 @@ const handleClick = async (todo: TodosRecord, db?: IndexedDb, dispatch?: ActionD
     dispatch({ type: TodoActionType.update, payload: response.todo });
 }
 
-// setting checked on the checkbox refering to the done status of the todo item works but it also means I can't click the checkbox
-// not 100% sure why 
-export default function TaskList({state, db, dispatch, ...props}: TaskListProps) {
+const handleClickDelete = async (todo: TodosRecord, db?: IndexedDb, dispatch?: ActionDispatch<[action: TodoAction]>) => {
+    if (!db) {
+        console.error("db not connected, could not upsert todo");
+        return;
+    }
+
+    const response = await deleteTodo(db, todo._id);
+
+    if (response.error) {
+        console.error(response.error);
+        return;
+    }
+
+    if (!dispatch) {
+        return;
+    }
+
+    dispatch({ type: TodoActionType.delete, payload: todo });
+}
+
+export default function TaskList({todos, db, dispatch, ...props}: TaskListProps) {
     return <div id="list" {...props}>
-        {state?.todos.map((todo: TodosRecord) => (<Checkbox key={todo._id} label={todo.task} checked={todo.done} onClick={async () => handleClick(todo, db, dispatch)}/> ))}
+        {todos?.map(
+            (todo: TodosRecord) => (
+                <Task
+                    todo={todo} 
+                    deleteButtonVariant="destructive"
+                    key={todo._id} 
+                    onClickCheckbox={async () => 
+                    handleClickCheckbox(todo, db, dispatch)} 
+                    onClickDelete={async () => handleClickDelete(todo, db, dispatch)}/> 
+            ))}
       </div>
 }
 
