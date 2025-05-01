@@ -1,0 +1,36 @@
+{
+    "eslint.validate": ["javascript", "typescript", "javascriptreact"],
+    "editor.formatOnSave": true,
+    "search.exclude": {
+        "node_modules": true,
+        "**/bower_components": true,
+        "gcp": true,
+        "tools": true,
+        "aws": true,
+        ".git": true,
+        "public/analytics": true,
+        "tsconfig.tsbuildinfo": true
+    },
+    "files.exclude": {
+        "devChromeProfile": true,
+        "**/node_modules": true,
+        "docs/": true,
+        "docs/build": true,
+        "tsconfig.tsbuildinfo": true
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+        "source.addMissingImports": "explicit",
+        "source.organizeImports": "explicit",
+        "source.fixAll": "explicit"
+    },
+    "[html]": {
+        "editor.formatOnSave": false
+    },
+    "[json]": {
+        "editor.formatOnSave": false
+    },
+    "workbench.editor.enablePreview": false,
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true
+}
